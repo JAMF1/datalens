@@ -1,14 +1,14 @@
 from os import PathLike
-from typing import IO
+from typing import Any, IO
 import pandas as pd 
 
-def load_data(file: str | PathLike[str] | IO[str]) -> pd.DataFrame:
+def load_data(file: str | PathLike[str] | IO[Any]) -> pd.DataFrame:
     """
     Load a CSV file into a pandas DataFrame.
 
     Parameters
     ----------
-    file : str, PathLike[str], or IO[str]
+    file : str, PathLike[str], or IO[Any]
         A filesystem path or a readable text stream containing CSV data.
 
     Returns

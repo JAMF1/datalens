@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datalens - Results</title>
+    <link rel="stylesheet" href="static\styles.css">
+</head>
+<body>
+    <main>
+        <h1>Dataset overview</h1>
+
+        <p>Rows: {{ total_rows }}</p>
+        <p>Columns: {{ total_columns }}</p>
+
+        {% if total_rows == 0 %}
+            <p>The file was read successfully, but no records were found.</p>
+        {% else %}
+            <h2>Preview (first 10 rows)</h2>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            {% for column in columns %}
+                                <th>{{ column }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in rows %}
+                            <tr>
+                                {% for value in row %}
+                                    <td>{{ value if value is not none else "" }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        <a href="{{ url_for('index') }}">Upload another file</a>
+    </main>
+</body>
+</html>
