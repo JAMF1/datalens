@@ -1,0 +1,7 @@
+Metadata-Version: 2.4
+Name: datalens
+Version: 0.1.0
+Requires-Python: >=3.10
+Requires-Dist: Flask
+Requires-Dist: pandas
+Requires-Dist: openpyxl

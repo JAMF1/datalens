@@ -1,0 +1,9 @@
+pyproject.toml
+src/datalens/__init__.py
+src/datalens/ingestion.py
+src/datalens.egg-info/PKG-INFO
+src/datalens.egg-info/SOURCES.txt
+src/datalens.egg-info/dependency_links.txt
+src/datalens.egg-info/requires.txt
+src/datalens.egg-info/top_level.txt
+tests/test_ingestion.py
