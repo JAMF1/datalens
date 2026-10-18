@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request
 from werkzeug.datastructures import FileStorage
 from datalens.ingestion import load_data
 
@@ -24,9 +24,9 @@ def upload_file():
         df = load_data(uploaded_file.stream)
 
     except ValueError as exc:
-        return render_template("index.html", error="Could not read the file. Check file contents and encoding."), 400
+        return render_template("index.html", error=str(exc)), 400
 
-    preview = df.head(10)
+    preview = df.head(200)
 
     return render_template("results.html", 
                            columns=preview.columns.tolist(),
