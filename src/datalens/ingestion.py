@@ -55,6 +55,7 @@ def load_data(file: str | PathLike[str] | IO[Any], file_type: str) -> pd.DataFra
         BadZipFile,
         InvalidFileException,
         ParseError,
+        pd.errors.EmptyDataError
     ) as exc:
         raise ValueError(
             "The XLSX file could not be read. "
