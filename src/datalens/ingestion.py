@@ -1,38 +1,62 @@
 from os import PathLike
 from typing import Any, IO
-import pandas as pd 
+from zipfile import BadZipFile
+from xml.etree.ElementTree import ParseError
 
-def load_data(file: str | PathLike[str] | IO[Any]) -> pd.DataFrame:
+import pandas as pd
+from openpyxl.utils.exceptions import InvalidFileException
+
+
+def load_data(file: str | PathLike[str] | IO[Any], file_type: str) -> pd.DataFrame:
     """
-    Load a CSV file into a pandas DataFrame.
+    Load a CSV or XLSX file into a pandas DataFrame.
 
     Parameters
     ----------
     file : str, PathLike[str], or IO[Any]
-        A filesystem path or a readable text stream containing CSV data.
+        A filesystem path or readable stream containing the file.
+    file_type : str
+        The file format: "csv" or "xlsx".
 
     Returns
     -------
     pd.DataFrame
-        The complete dataset, including all rows and columns.
+        The loaded dataset.
 
     Raises
     ------
     ValueError
-        If the file is empty or cannot be parsed as CSV.
+        If the format is unsupported or the file is empty,
+        malformed, or unreadable.
     OSError
         If a filesystem-related error prevents reading the file.
     """
+    file_type = file_type.lower().lstrip(".")
+
+    if file_type not in {"csv", "xlsx"}:
+        raise ValueError("Unsupported file format. Please use 'csv' or 'xlsx'.")
+
+    if file_type == "csv":
+        try:
+            return pd.read_csv(file)
+        
+        except pd.errors.EmptyDataError as exc:
+            raise ValueError("The uploaded file is empty or contains no readable data.") from exc
+        
+        except pd.errors.ParserError as exc:
+            raise ValueError("The CSV could not be parsed. "
+                             "Check its structure and delimiters.") from exc
 
     try:
-        return pd.read_csv(file)
+        return pd.read_excel(file, sheet_name=0)
     
-    except pd.errors.EmptyDataError as exc:
+    except (
+        ValueError,
+        BadZipFile,
+        InvalidFileException,
+        ParseError,
+    ) as exc:
         raise ValueError(
-            "The uploaded file is empty or contains no readable data."
-        ) from exc
-
-    except pd.errors.ParserError as exc:
-        raise ValueError(
-            "The CSV could not be parsed. Check its structure and delimiters."
+            "The XLSX file could not be read. "
+            "Check that it is a valid, uncorrupted Excel workbook."
         ) from exc
