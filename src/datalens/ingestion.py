@@ -16,21 +16,22 @@ def load_data(file: str | PathLike[str] | IO[Any], file_type: str) -> pd.DataFra
     file : str, PathLike[str], or IO[Any]
         A filesystem path or readable stream containing the file.
     file_type : str
-        The file format: "csv" or "xlsx".
+            The file format: "csv" or "xlsx".
 
-    Returns
-    -------
-    pd.DataFrame
-        The loaded dataset.
+        Returns
+        -------
+        pd.DataFrame
+            The loaded dataset.
 
-    Raises
-    ------
-    ValueError
-        If the format is unsupported or the file is empty,
-        malformed, or unreadable.
-    OSError
-        If a filesystem-related error prevents reading the file.
-    """
+        Raises
+        ------
+        ValueError
+            If the format is unsupported or the file is empty,
+            malformed, or unreadable.
+        OSError
+            If a filesystem-related error prevents reading the file.
+        """
+    
     file_type = file_type.lower().lstrip(".")
 
     if file_type not in {"csv", "xlsx"}:

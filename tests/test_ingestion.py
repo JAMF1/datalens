@@ -113,8 +113,6 @@ def test_load_empty_xlsx():
     assert isinstance(result, pd.DataFrame)
     assert result.empty
 
-
-
 def test_unsupported_file_type():
     with pytest.raises(ValueError, match="Unsupported file format"):
         load_data(BytesIO(b"sample"), "json")
