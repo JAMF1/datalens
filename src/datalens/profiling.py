@@ -34,12 +34,12 @@ def get_column_profile(dataframe: pd.DataFrame) -> list[dict]:
     list[dict]
         A list of dictionaries.
     """
-    
     column_info  = []
-    columns = dataframe.columns.tolist()
-    for column in columns:
-        column_dict = {}
-        column_dict["name"] = column 
-        column_dict["data_type"] = str(dataframe[column].dtype)
+
+    for position, column in enumerate(dataframe.columns):
+        column_dict = {
+            "name": column,
+            "data_type": str(dataframe.dtypes.iloc[position])
+        }
         column_info.append(column_dict)
     return column_info
