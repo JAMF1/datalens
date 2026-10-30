@@ -94,3 +94,69 @@ def get_descriptive_statistics(dataframe: pd.DataFrame) -> list[dict]:
         })
 
     return statistics
+
+def get_missing_value_profile(dataframe: pd.DataFrame) -> dict:
+    """
+    Generate a missing-value profile for each column and the entire dataset.
+
+    Calculates missing and non-missing value counts, missing-value
+    percentages, and overall dataset statistics. Missing values are
+    identified using pandas' isna() method.
+
+    Column positions are included to distinguish columns with duplicate
+    names. Percentages are represented as None when they cannot be
+    calculated due to zero rows or zero total cells.
+
+    The original DataFrame is not modified.
+
+    Parameters
+    ----------
+    dataframe : pd.DataFrame
+        The DataFrame to analyze.
+
+    Returns
+    -------
+    dict
+        A dictionary containing:
+        - columns: A list of dictionaries with each column's position,
+          name, missing count, non-missing count, and missing percentage.
+        - dataset: A dictionary containing row count, column count,
+          total missing values, total cells, and overall missing percentage.
+    """
+    missing_value_profiles = {}
+    column_profile = []
+
+    for position in range(len(dataframe.columns)):
+        column = dataframe.iloc[:, position]
+        missing_count = int(column.isna().sum())
+        non_missing_count = int(column.notna().sum())
+
+        if len(dataframe) == 0:
+            column_missing_percentage = None
+        else: 
+            column_missing_percentage = float((missing_count / len(dataframe)) * 100)
+
+        column_profile.append({
+            "position": position,
+            "name": column.name,
+            "missing_count": missing_count,
+            "non_missing_count": non_missing_count,
+            "missing_percentage": column_missing_percentage
+        })
+    total_missing = int(dataframe.isna().sum().sum())
+    total_cells = dataframe.size 
+    if total_cells == 0:
+        dataset_missing_percentage = None
+    else:
+        dataset_missing_percentage = float((total_missing / total_cells) * 100)
+
+    missing_value_profiles["columns"] = column_profile
+    missing_value_profiles["dataset"] = {
+        "row_count": len(dataframe),
+        "column_count": len(dataframe.columns),
+        "total_missing": total_missing,
+        "total_cells": total_cells,
+        "missing_percentage": dataset_missing_percentage
+    }
+
+    return missing_value_profiles

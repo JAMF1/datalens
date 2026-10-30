@@ -1,7 +1,7 @@
 
 import pandas as pd
 import pytest
-from datalens.profiling import get_dataset_overview, get_column_profile, get_descriptive_statistics
+from datalens.profiling import get_dataset_overview, get_column_profile, get_descriptive_statistics, get_missing_value_profile
 
 
 def test_normal_dataframe():
@@ -125,7 +125,7 @@ def test_no_numeric_columns():
     assert get_descriptive_statistics(df) == []
 
 
-def test_empty_dataframe():
+def test_empty_dataframe_for_descriptive_statistics():
     df = pd.DataFrame()
 
     assert get_descriptive_statistics(df) == []
@@ -186,5 +186,166 @@ def test_statistics_do_not_modify_dataframe():
     original_df = df.copy(deep=True)
 
     get_descriptive_statistics(df)
+
+    pd.testing.assert_frame_equal(df, original_df)
+
+def test_missing_value_profile_normal_dataframe():
+    df = pd.DataFrame({
+        "name": ["Alice", "Bob", None, "David"],
+        "age": [25, None, 35, 40],
+        "salary": [40000, 50000, 60000, 70000]
+    })
+
+    result = get_missing_value_profile(df)
+
+    assert result["columns"] == [
+        {
+            "position": 0,
+            "name": "name",
+            "missing_count": 1,
+            "non_missing_count": 3,
+            "missing_percentage": 25.0
+        },
+        {
+            "position": 1,
+            "name": "age",
+            "missing_count": 1,
+            "non_missing_count": 3,
+            "missing_percentage": 25.0
+        },
+        {
+            "position": 2,
+            "name": "salary",
+            "missing_count": 0,
+            "non_missing_count": 4,
+            "missing_percentage": 0.0
+        }
+    ]
+
+    assert result["dataset"] == {
+        "row_count": 4,
+        "column_count": 3,
+        "total_missing": 2,
+        "total_cells": 12,
+        "missing_percentage": pytest.approx(16.6666666667)
+    }
+
+def test_missing_value_profile_no_missing_values():
+    df = pd.DataFrame({
+        "name": ["Alice", "Bob"],
+        "age": [25, 30]
+    })
+
+    result = get_missing_value_profile(df)
+
+    assert result["dataset"]["total_missing"] == 0
+    assert result["dataset"]["missing_percentage"] == 0.0
+
+    for column in result["columns"]:
+        assert column["missing_count"] == 0
+        assert column["missing_percentage"] == 0.0
+
+def test_missing_value_profile_all_values_missing():
+    df = pd.DataFrame({
+        "name": [None, None],
+        "age": [None, None]
+    })
+
+    result = get_missing_value_profile(df)
+
+    assert result["dataset"]["total_missing"] == 4
+    assert result["dataset"]["total_cells"] == 4
+    assert result["dataset"]["missing_percentage"] == 100.0
+
+    for column in result["columns"]:
+        assert column["missing_count"] == 2
+        assert column["non_missing_count"] == 0
+        assert column["missing_percentage"] == 100.0
+    
+def test_missing_value_profile_zero_rows():
+    df = pd.DataFrame(columns=["name", "age"])
+
+    result = get_missing_value_profile(df)
+
+    assert len(result["columns"]) == 2
+
+    for column in result["columns"]:
+        assert column["missing_count"] == 0
+        assert column["non_missing_count"] == 0
+        assert column["missing_percentage"] is None
+
+    assert result["dataset"] == {
+        "row_count": 0,
+        "column_count": 2,
+        "total_missing": 0,
+        "total_cells": 0,
+        "missing_percentage": None
+    }
+
+def test_missing_value_profile_zero_columns():
+    df = pd.DataFrame(index=range(3))
+
+    result = get_missing_value_profile(df)
+
+    assert result["columns"] == []
+
+    assert result["dataset"] == {
+        "row_count": 3,
+        "column_count": 0,
+        "total_missing": 0,
+        "total_cells": 0,
+        "missing_percentage": None
+    }
+
+def test_missing_value_profile_empty_dataframe():
+    df = pd.DataFrame()
+
+    result = get_missing_value_profile(df)
+
+    assert result["columns"] == []
+
+    assert result["dataset"] == {
+        "row_count": 0,
+        "column_count": 0,
+        "total_missing": 0,
+        "total_cells": 0,
+        "missing_percentage": None
+    }
+
+def test_missing_value_profile_duplicate_column_names():
+    df = pd.DataFrame(
+        [["Alice", None], ["Bob", "Smith"]],
+        columns=["name", "name"]
+    )
+
+    result = get_missing_value_profile(df)
+
+    assert len(result["columns"]) == 2
+
+    assert result["columns"][0] == {
+        "position": 0,
+        "name": "name",
+        "missing_count": 0,
+        "non_missing_count": 2,
+        "missing_percentage": 0.0
+    }
+
+    assert result["columns"][1] == {
+        "position": 1,
+        "name": "name",
+        "missing_count": 1,
+        "non_missing_count": 1,
+        "missing_percentage": 50.0
+    }
+    
+def test_missing_value_profile_does_not_modify_dataframe():
+    df = pd.DataFrame({
+        "name": ["Alice", None],
+        "age": [25, 30]
+    })
+
+    original_df = df.copy(deep=True)
+
+    get_missing_value_profile(df)
 
     pd.testing.assert_frame_equal(df, original_df)
