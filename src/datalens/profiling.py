@@ -38,6 +38,7 @@ def get_column_profile(dataframe: pd.DataFrame) -> list[dict]:
 
     for position, column in enumerate(dataframe.columns):
         column_dict = {
+            "position": position,
             "name": column,
             "data_type": str(dataframe.dtypes.iloc[position])
         }

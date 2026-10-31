@@ -6,12 +6,59 @@
     <title>Datalens - Results</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body>
     <main>
         <h1>Dataset overview</h1>
+        <p>Rows: {{ dataset_overview["row_count"] }}</p>
+        <p>Columns: {{ dataset_overview["column_count"] }}</p>
 
-        <p>Rows: {{ total_rows }}</p>
-        <p>Columns: {{ total_columns }}</p>
+        <h2>Missing-value summary</h2>
+        <p>Missing cells: {{ missing_value_profile["dataset"]["total_missing"] }}</p>
+        <p>Total cells: {{ missing_value_profile["dataset"]["total_cells"] }}</p>
+        {% if missing_value_profile["dataset"]["missing_percentage"] == None %}
+            <p>Missing Percentage: N/A</p>
+        {% else %}
+            <p>Missing percentage: {{ missing_value_profile["dataset"]["missing_percentage"] }}%</p>
+        {% endif %}
+
+        <h2>Column Profile</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Column</th>
+                    <th>Data Type</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for column_dict in column_profile %}
+                <tr>
+                    <td>{{column_dict["name"]}}</td>
+                    <td>{{column_dict["data_type"]}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Descriptive statistics</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Statistic</th>
+                    {% for column in descriptive_statistics %}
+                    <th>{{ column["name"] }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for column in descriptive_statistics %}
+                    <tr>
+                        {% for s}
+                        <td></td>
+                    </tr>
+            </tbody>
+        </table>
+
 
         {% if total_rows == 0 %}
             <p>The file was read successfully, but no records were found.</p>
