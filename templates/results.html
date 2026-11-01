@@ -16,51 +16,69 @@
         <h2>Missing-value summary</h2>
         <p>Missing cells: {{ missing_value_profile["dataset"]["total_missing"] }}</p>
         <p>Total cells: {{ missing_value_profile["dataset"]["total_cells"] }}</p>
-        {% if missing_value_profile["dataset"]["missing_percentage"] == None %}
-            <p>Missing Percentage: N/A</p>
+        {% if missing_value_profile["dataset"]["missing_percentage"] is none %}
+            <p>Missing percentage: N/A</p>
         {% else %}
             <p>Missing percentage: {{ missing_value_profile["dataset"]["missing_percentage"] }}%</p>
         {% endif %}
 
         <h2>Column Profile</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Column</th>
-                    <th>Data Type</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for column_dict in column_profile %}
-                <tr>
-                    <td>{{column_dict["name"]}}</td>
-                    <td>{{column_dict["data_type"]}}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        {% if column_profile %}
+            <div class="table-container">
+                <table class="column-profile-table">
+                    <thead>
+                        <tr>
+                            <th>Column</th>
+                            <th>Data Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for column_dict in column_profile %}
+                        <tr>
+                            <td>{{column_dict["name"]}}</td>
+                            <td>{{column_dict["data_type"]}}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No columns available for profiling</p>
+        {% endif %}
 
         <h2>Descriptive statistics</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Statistic</th>
-                    {% for column in descriptive_statistics %}
-                    <th>{{ column["name"] }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for column in descriptive_statistics %}
-                    <tr>
-                        {% for s}
-                        <td></td>
-                    </tr>
-            </tbody>
-        </table>
+        {% if descriptive_statistics %}
+            <div class="table-container">
+                <table class="statistics-table">
+                    <thead>
+                        <tr>
+                            <th>Statistic</th>
+                            {% for column in descriptive_statistics %}
+                                <th>{{ column["name"] }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
 
+                    <tbody>
+                        {% for stat in descriptive_statistics[0]["statistics"].keys() %}
+                        <tr>
+                            <th>{{ stat }}</th>
+                                {% for column in descriptive_statistics %}
+                                    {% set value = column["statistics"][stat] %}
+                                    <td>
+                                        {{ value if value is not none else "N/A" }}
+                                    </td>
+                                {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No numeric columns available for descriptive statistics.</p>
+        {% endif %}
 
-        {% if total_rows == 0 %}
+        {% if dataset_overview["row_count"] == 0 %}
             <p>The file was read successfully, but no records were found.</p>
         {% else %}
             <h2>Preview (first 10 rows)</h2>
