@@ -208,3 +208,120 @@ def test_upload_csv_with_zero_rows(client):
     assert "Columns: 3" in html
     assert "Missing percentage: N/A" in html
     assert "The file was read successfully, but no records were found." in html
+
+def test_upload_csv_displays_duplicate_profile(client):
+    csv_content = (
+        "name,age\n"
+        "Alice,25\n"
+        "Bob,30\n"
+        "Alice,25\n"
+        "Charlie,35\n"
+        "Bob,30\n"
+    )
+
+    response = client.post(
+        "/upload",
+        data={
+            "file": (BytesIO(csv_content.encode("utf-8")), "people.csv")
+        },
+        content_type="multipart/form-data"
+    )
+
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "Duplicate Records" in html
+    assert "5" in html
+    assert "2" in html
+    assert "40.0%" in html
+
+def test_upload_csv_without_duplicates(client):
+    csv_content = (
+        "name,age\n"
+        "Alice,25\n"
+        "Bob,30\n"
+        "Charlie,35\n"
+    )
+
+    response = client.post(
+        "/upload",
+        data={
+            "file": (BytesIO(csv_content.encode("utf-8")), "people.csv")
+        },
+        content_type="multipart/form-data"
+    )
+
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "Duplicate Records" in html
+    assert "0" in html
+    assert "0.0%" in html
+
+def test_upload_csv_with_missing_value_duplicates(client):
+    csv_content = (
+        "name,age\n"
+        "Alice,\n"
+        "Alice,\n"
+        "Bob,30\n"
+    )
+
+    response = client.post(
+        "/upload",
+        data={
+            "file": (BytesIO(csv_content.encode("utf-8")), "people.csv")
+        },
+        content_type="multipart/form-data"
+    )
+
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "Duplicate Records" in html
+    assert "1" in html
+    assert "33.33333333333333%" in html
+
+def test_upload_xlsx_displays_duplicate_profile(client):
+    excel_content = BytesIO()
+
+    df = pd.DataFrame({
+        "name": ["Alice", "Bob", "Alice"],
+        "age": [25, 30, 25]
+    })
+
+    df.to_excel(excel_content, index=False)
+    excel_content.seek(0)
+
+    response = client.post(
+        "/upload",
+        data={
+            "file": (excel_content, "people.xlsx")
+        },
+        content_type="multipart/form-data"
+    )
+
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "Duplicate Records" in html
+    assert "3" in html
+    assert "1" in html
+    assert "33.33333333333333%" in html
+
+def test_upload_csv_with_zero_rows_displays_duplicate_profile(client):
+    csv_content = "name,age\n"
+
+    response = client.post(
+        "/upload",
+        data={
+            "file": (BytesIO(csv_content.encode("utf-8")), "people.csv")
+        },
+        content_type="multipart/form-data"
+    )
+
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "Duplicate Records" in html
+    assert "0" in html
+    assert "N/A" in html
