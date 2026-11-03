@@ -78,6 +78,40 @@
             <p>No numeric columns available for descriptive statistics.</p>
         {% endif %}
 
+        <h2>Duplicate Records</h2>
+        {% if duplicate_profile %}
+            <div class="table-container">
+                <table class="duplicates-table">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Values</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Total rows</td>
+                            <td> {{duplicate_profile["total_rows"]}}</td>
+                        </tr>
+                        <tr>
+                            <td>Duplicate occurrences</td>
+                            <td> {{duplicate_profile["duplicate_count"]}}</td>
+                        </tr>
+                        <tr>
+                            <td>Duplicate percentage</td>
+                            {% if duplicate_profile["duplicate_percentage"] is none %}
+                                <td>N/A</td>
+                            {% else %}
+                                <td>{{ duplicate_profile["duplicate_percentage"] }}%</td>
+                            {% endif %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No available information to display</p>
+        {% endif %}
+
         {% if dataset_overview["row_count"] == 0 %}
             <p>The file was read successfully, but no records were found.</p>
         {% else %}
