@@ -31,3 +31,11 @@ class DataQualityReport(TypedDict):
     dataset_summary: DatasetQualitySummary
     deterministic_findings: list[DataQualityFinding]
     heuristic_suggestions: list[DataQualityFinding]
+
+class DetectionRule(TypedDict):
+    rule_id: str
+    category: str
+    issue_type: str
+    detection_type: Literal["deterministic", "heuristic"]
+    description: str
+    recommendation: str
