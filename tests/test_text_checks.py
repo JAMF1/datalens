@@ -1,5 +1,11 @@
 import pandas as pd 
-from datalens.data_quality.text_checks import find_leading_whitespace, find_trailing_whitespace, find_repeated_whitespace, find_whitespace_only_strings
+from datalens.data_quality.text_checks import (
+    find_leading_whitespace, 
+    find_trailing_whitespace, 
+    find_repeated_whitespace, 
+    find_whitespace_only_strings,
+    find_inconsistent_capitalization
+    )
 
 def test_leading_whitespace():
     df = pd.DataFrame({
@@ -468,5 +474,145 @@ def test_find_whitespace_only_strings_does_not_detect_empty_strings():
     })
 
     result = find_whitespace_only_strings(dataframe)
+
+    assert result == []
+
+####INCONSISTEN CAPITALIZATION####
+def test_find_inconsistent_capitalization():
+    dataframe = pd.DataFrame({
+        "fruit": ["Apple", "apple", "APPLE", "Banana", "apple"]
+    })
+
+    result = find_inconsistent_capitalization(dataframe)
+
+    assert len(result) == 1
+    assert result[0]["issue_type"] == "inconsistent_capitalization"
+    assert result[0]["affected_count"] == 4
+    assert result[0]["distinct_value_count"] == 3
+    assert result[0]["affected_values"] == [
+        {"value": "Apple", "count": 1},
+        {"value": "apple", "count": 2},
+        {"value": "APPLE", "count": 1}
+    ]
+
+
+def test_find_inconsistent_capitalization_multiple_groups():
+    dataframe = pd.DataFrame({
+        "fruit": ["Apple", "APPLE", "Banana", "BANANA", "Orange"]
+    })
+
+    result = find_inconsistent_capitalization(dataframe)
+
+    assert result[0]["affected_count"] == 4
+    assert result[0]["distinct_value_count"] == 4
+    assert result[0]["affected_values"] == [
+        {"value": "Apple", "count": 1},
+        {"value": "APPLE", "count": 1},
+        {"value": "Banana", "count": 1},
+        {"value": "BANANA", "count": 1}
+    ]
+
+
+def test_find_inconsistent_capitalization_multiple_columns():
+    dataframe = pd.DataFrame({
+        "fruit": ["Apple", "APPLE"],
+        "city": ["London", "london"]
+    })
+
+    result = find_inconsistent_capitalization(dataframe)
+
+    assert len(result) == 2
+    assert [finding["column_position"] for finding in result] == [0, 1]
+
+
+def test_find_inconsistent_capitalization_mixed_types():
+    dataframe = pd.DataFrame({
+        "mixed": ["Apple", "APPLE", 123, None, True, "Banana"]
+    })
+
+    result = find_inconsistent_capitalization(dataframe)
+
+    assert result[0]["affected_count"] == 2
+    assert result[0]["affected_values"] == [
+        {"value": "Apple", "count": 1},
+        {"value": "APPLE", "count": 1}
+    ]
+
+
+def test_find_inconsistent_capitalization_empty_dataframe():
+    dataframe = pd.DataFrame()
+
+    result = find_inconsistent_capitalization(dataframe)
+
+    assert result == []
+
+
+def test_find_inconsistent_capitalization_does_not_modify_dataframe():
+    dataframe = pd.DataFrame({
+        "fruit": ["Apple", "APPLE", "Banana"]
+    })
+    original_dataframe = dataframe.copy(deep=True)
+
+    find_inconsistent_capitalization(dataframe)
+
+    pd.testing.assert_frame_equal(dataframe, original_dataframe)
+
+
+def test_find_inconsistent_capitalization_duplicate_column_names():
+    dataframe = pd.DataFrame(
+        [["Apple", "London"], ["APPLE", "london"]],
+        columns=["value", "value"]
+    )
+
+    result = find_inconsistent_capitalization(dataframe)
+
+    assert len(result) == 2
+    assert [finding["column_position"] for finding in result] == [0, 1]
+
+
+def test_find_inconsistent_capitalization_no_matches():
+    dataframe = pd.DataFrame({
+        "fruit": ["Apple", "Banana", "Orange"]
+    })
+
+    result = find_inconsistent_capitalization(dataframe)
+
+    assert result == []
+
+
+def test_find_inconsistent_capitalization_pandas_string_dtype():
+    dataframe = pd.DataFrame({
+        "fruit": pd.Series(["Apple", "APPLE", "Banana"], dtype="string")
+    })
+
+    result = find_inconsistent_capitalization(dataframe)
+
+    assert result[0]["affected_count"] == 2
+    assert result[0]["affected_values"] == [
+        {"value": "Apple", "count": 1},
+        {"value": "APPLE", "count": 1}
+    ]
+
+
+def test_find_inconsistent_capitalization_ignores_whitespace_only_strings():
+    dataframe = pd.DataFrame({
+        "text": ["   ", "APPLE", "apple", "\t"]
+    })
+
+    result = find_inconsistent_capitalization(dataframe)
+
+    assert result[0]["affected_count"] == 2
+    assert result[0]["affected_values"] == [
+        {"value": "APPLE", "count": 1},
+        {"value": "apple", "count": 1}
+    ]
+
+
+def test_find_inconsistent_capitalization_ignores_identical_repeated_values():
+    dataframe = pd.DataFrame({
+        "fruit": ["Apple", "Apple", "Banana", "Banana"]
+    })
+
+    result = find_inconsistent_capitalization(dataframe)
 
     assert result == []
