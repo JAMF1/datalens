@@ -15,8 +15,8 @@ def test_normal_dataframe():
 
     assert result == {"row_count": 3, "column_count": 2}
     assert column_profile == [
-        {"name": "calories", "data_type": "int64"},
-        {"name": "duration", "data_type": "float64"},
+        {"position": 0, "name": "calories", "data_type": "int64"},
+        {"position": 1, "name": "duration", "data_type": "float64"},
     ]
 
 def test_dataframe_with_no_columns():
@@ -39,8 +39,8 @@ def test_dataframe_with_no_rows():
 
     assert result == {"row_count": 0, "column_count": 2}
     assert column_profile == [
-        {"name": "name", "data_type": "float64"},
-        {"name": "age", "data_type": "float64"},
+        {"position": 0, "name": "name", "data_type": "float64"},
+        {"position": 1, "name": "age", "data_type": "float64"},
     ]
 
 def test_empty_dataframe():
@@ -72,8 +72,8 @@ def test_column_profile_with_blank_names():
     result = get_column_profile(df)
 
     assert result == [
-        {"name": "", "data_type": "int64"},
-        {"name": "", "data_type": "int64"},
+        {"position": 0, "name": "", "data_type": "int64"},
+        {"position": 1,"name": "", "data_type": "int64"},
     ]
 
 def test_column_profile_does_not_modify_dataframe():
