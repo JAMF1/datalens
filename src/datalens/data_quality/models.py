@@ -39,3 +39,14 @@ class DetectionRule(TypedDict):
     detection_type: Literal["deterministic", "heuristic"]
     description: str
     recommendation: str
+
+class CategoricalColumnProfile(TypedDict):
+    column: Any
+    column_position: int
+    data_type: str
+    unique_count: int
+    non_missing_count: int
+    unique_ratio: float | None
+    automatic_suggestion: bool
+    user_selected: bool
+    is_categorical: bool
