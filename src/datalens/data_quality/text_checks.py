@@ -49,6 +49,32 @@ INCONSISTENT_CAPITALIZATION_RULE: DetectionRule = {
     "recommendation": "Standardize capitalization across equivalent text values."
     }
 
+def _is_text_column(column: pd.Series) -> bool:
+    return (is_object_dtype(column.dtype) or is_string_dtype(column.dtype))
+
+def _build_text_detection_results(column: pd.Series, column_position: int, affected_values: list[str], rule: DetectionRule) -> DetectionResult:
+    counts = Counter(affected_values)
+    affected_value_details: list[AffectedValue] = [
+        {"value": value, "count": count} 
+        for value, count in counts.items()
+        ]
+    affected_count = sum(counts.values())
+    distinct_value_count = len(counts)
+
+    detection_results = DetectionResult(
+        rule_id=rule["rule_id"],
+        category=rule["category"],
+        issue_type=rule["issue_type"],
+        column=column.name,
+        column_position=column_position,
+        detection_type=rule["detection_type"],
+        description=rule["description"],
+        recommendation=rule["recommendation"],
+        affected_count=affected_count,
+        affected_unit="cells",
+        distinct_value_count=distinct_value_count,
+        affected_values=affected_value_details)
+    return detection_results
 
 def find_leading_whitespace(dataframe: pd.DataFrame) -> list[DetectionResult]:
     findings = []
@@ -56,7 +82,7 @@ def find_leading_whitespace(dataframe: pd.DataFrame) -> list[DetectionResult]:
     for position in range(len(dataframe.columns)):
         column = dataframe.iloc[:, position]
 
-        if not (is_object_dtype(column.dtype) or is_string_dtype(column.dtype)):
+        if not _is_text_column(column):
             continue
 
         affected_values = []
@@ -68,29 +94,14 @@ def find_leading_whitespace(dataframe: pd.DataFrame) -> list[DetectionResult]:
                 affected_values.append(value)
 
         if affected_values:
-            counts = Counter(affected_values)
-        
-            affected_value_details: list[AffectedValue] = [
-                {"value": value, "count": count} 
-                for value, count in counts.items()
-            ]
-            affected_count = sum(counts.values())
-            distinct_value_count = len(counts)
+            finding = _build_text_detection_results(
+                column=column,
+                column_position=position,
+                affected_values=affected_values,
+                rule=LEADING_WHITESPACE_RULE
+                )
 
-            detection_results = DetectionResult(rule_id=LEADING_WHITESPACE_RULE["rule_id"],
-                                    category=LEADING_WHITESPACE_RULE["category"],
-                                    issue_type=LEADING_WHITESPACE_RULE["issue_type"],
-                                    column=column.name,
-                                    column_position=position,
-                                    detection_type=LEADING_WHITESPACE_RULE["detection_type"],
-                                    description=LEADING_WHITESPACE_RULE["description"],
-                                    recommendation=LEADING_WHITESPACE_RULE["recommendation"],
-                                    affected_count=affected_count,
-                                    affected_unit="cells",
-                                    distinct_value_count=distinct_value_count,
-                                    affected_values=affected_value_details
-                                    )
-            findings.append(detection_results)
+            findings.append(finding)
 
     return findings
 
@@ -100,7 +111,7 @@ def find_trailing_whitespace(dataframe: pd.DataFrame) -> list[DetectionResult]:
     for position in range(len(dataframe.columns)):
         column = dataframe.iloc[:, position]
 
-        if not (is_object_dtype(column.dtype) or is_string_dtype(column.dtype)):
+        if not _is_text_column(column):
             continue
 
         affected_values = []
@@ -113,29 +124,14 @@ def find_trailing_whitespace(dataframe: pd.DataFrame) -> list[DetectionResult]:
                 affected_values.append(value)
 
         if affected_values:
-            counts = Counter(affected_values)
-        
-            affected_value_details: list[AffectedValue] = [
-                {"value": value, "count": count} 
-                for value, count in counts.items()
-            ]
-            affected_count = sum(counts.values())
-            distinct_value_count = len(counts)
+            finding = _build_text_detection_results(
+                column=column,
+                column_position=position,
+                affected_values=affected_values,
+                rule=TRAILING_WHITESPACE_RULE
+                )
 
-            detection_results = DetectionResult(rule_id=TRAILING_WHITESPACE_RULE["rule_id"],
-                                    category=TRAILING_WHITESPACE_RULE["category"],
-                                    issue_type=TRAILING_WHITESPACE_RULE["issue_type"],
-                                    column=column.name,
-                                    column_position=position,
-                                    detection_type=TRAILING_WHITESPACE_RULE["detection_type"],
-                                    description=TRAILING_WHITESPACE_RULE["description"],
-                                    recommendation=TRAILING_WHITESPACE_RULE["recommendation"],
-                                    affected_count=affected_count,
-                                    affected_unit="cells",
-                                    distinct_value_count=distinct_value_count,
-                                    affected_values=affected_value_details
-                                    )
-            findings.append(detection_results)
+            findings.append(finding)
 
     return findings
 
@@ -145,7 +141,7 @@ def find_repeated_whitespace(dataframe: pd.DataFrame) -> list[DetectionResult]:
     for position in range(len(dataframe.columns)):
         column = dataframe.iloc[:, position]
 
-        if not (is_object_dtype(column.dtype) or is_string_dtype(column.dtype)):
+        if not _is_text_column(column):
             continue
 
         affected_values = []
@@ -158,29 +154,14 @@ def find_repeated_whitespace(dataframe: pd.DataFrame) -> list[DetectionResult]:
                 affected_values.append(value)
 
         if affected_values:
-            counts = Counter(affected_values)
-        
-            affected_value_details: list[AffectedValue] = [
-                {"value": value, "count": count} 
-                for value, count in counts.items()
-            ]
-            affected_count = sum(counts.values())
-            distinct_value_count = len(counts)
+            finding = _build_text_detection_results(
+                column=column,
+                column_position=position,
+                affected_values=affected_values,
+                rule=REPEATING_WHITESPACE_RULE
+                )
 
-            detection_results = DetectionResult(rule_id=REPEATING_WHITESPACE_RULE["rule_id"],
-                                    category=REPEATING_WHITESPACE_RULE["category"],
-                                    issue_type=REPEATING_WHITESPACE_RULE["issue_type"],
-                                    column=column.name,
-                                    column_position=position,
-                                    detection_type=REPEATING_WHITESPACE_RULE["detection_type"],
-                                    description=REPEATING_WHITESPACE_RULE["description"],
-                                    recommendation=REPEATING_WHITESPACE_RULE["recommendation"],
-                                    affected_count=affected_count,
-                                    affected_unit="cells",
-                                    distinct_value_count=distinct_value_count,
-                                    affected_values=affected_value_details
-                                    )
-            findings.append(detection_results)
+            findings.append(finding)
 
     return findings
 
@@ -190,7 +171,7 @@ def find_whitespace_only_strings(dataframe: pd.DataFrame) -> list[DetectionResul
     for position in range(len(dataframe.columns)):
         column = dataframe.iloc[:, position]
 
-        if not (is_object_dtype(column.dtype) or is_string_dtype(column.dtype)):
+        if not _is_text_column(column):
             continue
 
         affected_values = []
@@ -206,29 +187,14 @@ def find_whitespace_only_strings(dataframe: pd.DataFrame) -> list[DetectionResul
                 affected_values.append(value)
 
         if affected_values:
-            counts = Counter(affected_values)
-        
-            affected_value_details: list[AffectedValue] = [
-                {"value": value, "count": count} 
-                for value, count in counts.items()
-            ]
-            affected_count = sum(counts.values())
-            distinct_value_count = len(counts)
+            finding = _build_text_detection_results(
+                column=column,
+                column_position=position,
+                affected_values=affected_values,
+                rule=WHITESPACE_ONLY_RULE
+                )
 
-            detection_results = DetectionResult(rule_id=WHITESPACE_ONLY_RULE["rule_id"],
-                                    category=WHITESPACE_ONLY_RULE["category"],
-                                    issue_type=WHITESPACE_ONLY_RULE["issue_type"],
-                                    column=column.name,
-                                    column_position=position,
-                                    detection_type=WHITESPACE_ONLY_RULE["detection_type"],
-                                    description=WHITESPACE_ONLY_RULE["description"],
-                                    recommendation=WHITESPACE_ONLY_RULE["recommendation"],
-                                    affected_count=affected_count,
-                                    affected_unit="cells",
-                                    distinct_value_count=distinct_value_count,
-                                    affected_values=affected_value_details
-                                    )
-            findings.append(detection_results)
+            findings.append(finding)
 
     return findings
 
@@ -238,7 +204,7 @@ def find_inconsistent_capitalization(dataframe: pd.DataFrame) -> list[DetectionR
     for position in range(len(dataframe.columns)):
         column = dataframe.iloc[:, position]
 
-        if not (is_object_dtype(column.dtype) or is_string_dtype(column.dtype)):
+        if not _is_text_column(column):
             continue
 
         affected_values = []
@@ -247,7 +213,6 @@ def find_inconsistent_capitalization(dataframe: pd.DataFrame) -> list[DetectionR
         for value in column:
             if not isinstance(value, str):
                 continue
-
             if value.isspace():
                 continue
             
@@ -257,34 +222,22 @@ def find_inconsistent_capitalization(dataframe: pd.DataFrame) -> list[DetectionR
             else:
                 groupings[lower_case_version].append(value)
 
-        #Fix error here
         for group in groupings.values():
-            if len(group) > 1: 
+            if len(group) == 1: 
+                continue
+            elif len(set(group)) == 1:
+                continue
+            else: 
                 affected_values.extend(group)
 
         if affected_values:
-            counts = Counter(affected_values)
-        
-            affected_value_details: list[AffectedValue] = [
-                {"value": value, "count": count} 
-                for value, count in counts.items()
-            ]
-            affected_count = sum(counts.values())
-            distinct_value_count = len(counts)
+            finding = _build_text_detection_results(
+                column=column,
+                column_position=position,
+                affected_values=affected_values,
+                rule=INCONSISTENT_CAPITALIZATION_RULE
+                )
 
-            detection_results = DetectionResult(rule_id=INCONSISTENT_CAPITALIZATION_RULE["rule_id"],
-                                    category=INCONSISTENT_CAPITALIZATION_RULE["category"],
-                                    issue_type=INCONSISTENT_CAPITALIZATION_RULE["issue_type"],
-                                    column=column.name,
-                                    column_position=position,
-                                    detection_type=INCONSISTENT_CAPITALIZATION_RULE["detection_type"],
-                                    description=INCONSISTENT_CAPITALIZATION_RULE["description"],
-                                    recommendation=INCONSISTENT_CAPITALIZATION_RULE["recommendation"],
-                                    affected_count=affected_count,
-                                    affected_unit="cells",
-                                    distinct_value_count=distinct_value_count,
-                                    affected_values=affected_value_details
-                                    )
-            findings.append(detection_results)
+            findings.append(finding)
 
     return findings
