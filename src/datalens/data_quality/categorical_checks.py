@@ -47,22 +47,65 @@ def get_categorical_column_profile(dataframe: pd.DataFrame) -> list[CategoricalC
 
     return categorical_profile
 
-dataframe = pd.DataFrame({
-        "country": ["Mexico", "USA", "Canada", "Mexico", None],
-        "department": ["Sales", "HR", "Sales", "IT", "HR"],
-        "customer_id": [1, 2, 3, 4, 5],
-        "comments": ["Good", None, "Bad", "Average", "Good"],
-        "empty_column": [None, None, None, None, None]
-    })
+def suggest_categorical_columns(profiles: list[CategoricalColumnProfile], max_unique_ratio: float = 0.05, min_non_missing: int = 20) -> list[CategoricalColumnProfile]:
+    if isinstance(max_unique_ratio, bool) or not isinstance(max_unique_ratio, (int, float)):
+        raise ValueError("max_unique_ratio must be a number between 0 and 1.")
 
-# results = get_categorical_column_profile(dataframe=dataframe)
+    if isinstance(min_non_missing, bool) or not isinstance(min_non_missing, int):
+        raise ValueError("min_non_missing must be a positive integer.")
 
-# for column_profile in results:
-#     print(column_profile["column"],
-#           column_profile["unique_count"],
-#           column_profile["non_missing_count"],
-#           column_profile["unique_ratio"])
+    if not (0 < max_unique_ratio <= 1):
+        raise ValueError("max_unique_ratio must be greater than 0 and less than or equal to 1.")
 
-print(pd.__version__)
+    if min_non_missing < 1:
+        raise ValueError("min_non_missing must be at least 1.")
 
-#print(dataframe["country"].dtype)
+    updated = []
+
+    for profile in profiles:
+        if profile['unique_ratio'] is not None:
+            suggestion = (profile['unique_ratio'] <= max_unique_ratio) and (profile['non_missing_count'] >= min_non_missing)
+        else:
+            suggestion = False
+
+        updated_profile = {
+            **profile,
+            "automatic_suggestion": suggestion,
+            "is_categorical": suggestion or profile["user_selected"]
+        }
+
+        updated.append(updated_profile)
+
+    return updated
+
+def apply_categorical_selection(profiles: list[CategoricalColumnProfile], selected_positions: list[int]) -> list[CategoricalColumnProfile]:
+    if not isinstance(profiles, list):
+        raise ValueError("Profiles must be a list")
+    if not isinstance(selected_positions, list):
+        raise ValueError("Selected positions must be a list containing selected values")
+    if not all(isinstance(position, int) and not isinstance(position, bool)
+           for position in selected_positions):
+        raise ValueError("Every selected position must be an integer.")
+
+    valid_positions = {profile["column_position"] for profile in profiles}
+
+    if not set(selected_positions).issubset(valid_positions):
+        raise ValueError("Selected positions must correspond to existing column profiles.")
+    
+    updated = []
+
+    for profile in profiles:
+        if profile["column_position"] in selected_positions:
+            user_selected = True
+        else:
+            user_selected = False
+
+        updated_profile = {
+            **profile,
+            "user_selected": user_selected,
+            "is_categorical": user_selected or profile["automatic_suggestion"]
+        }
+
+        updated.append(updated_profile)
+
+    return updated
